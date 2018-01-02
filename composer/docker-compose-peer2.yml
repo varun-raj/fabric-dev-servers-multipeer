@@ -1,0 +1,37 @@
+version: '2'
+
+services:
+  peer2.org1.example.com:
+    container_name: peer2.org1.example.com
+    image: hyperledger/fabric-peer:$ARCH-1.0.4
+    environment:
+      - CORE_LOGGING_PEER=debug
+      - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer2.org1.example.com
+      - CORE_PEER_ADDRESS=peer2.org1.example.com:7051
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=composer_default
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/peer/msp
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb2:5984
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: peer node start --peer-defaultchain=false
+    ports:
+      - 9051:7051
+      - 9053:7053
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./:/etc/hyperledger/configtx
+        - ./crypto-config/peerOrganizations/org1.example.com/peers/peer2.org1.example.com/msp:/etc/hyperledger/peer/msp
+        - ./crypto-config/peerOrganizations/org1.example.com/users:/etc/hyperledger/msp/users
+    depends_on:
+      - couchdb2
+
+  couchdb2:
+    container_name: couchdb2
+    image: hyperledger/fabric-couchdb:$ARCH-1.0.4
+    ports:
+      - 7984:5984
+    environment:
+      DB_URL: http://localhost:7984/member_db
